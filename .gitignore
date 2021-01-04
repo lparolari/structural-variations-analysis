@@ -1,0 +1,20 @@
+# Wig files
+*.wig
+
+# Index files
+*.amb
+*.ann
+*.bwt
+*.pac
+*.sa
+
+# Genome files
+*.fasta
+*.fastq
+
+# Alignment files
+*.sam
+*.bam
+
+# Python venv
+.venv
