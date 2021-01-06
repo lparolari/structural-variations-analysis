@@ -9,6 +9,7 @@ ALIGNED_SORTED=${ALIGNED}_sorted.bam
 ALIGNED_SORTED_INDEXED=${ALIGNED}_sorted.bam.bai
 SEQ_COVERAGE=lact_seqcov
 PHYSICAL_COVERAGE=lact_physicalcov
+SINGLE_MATES=lact_singlemates
 
 ### **********************************************************
 ### MAIN TARGETS
@@ -50,11 +51,17 @@ ${ALIGNED_SORTED}: ${ALIGNED_BAM}
 ${ALIGNED_SORTED_INDEXED}: ${ALIGNED_SORTED}
 	./samtools index ${ALIGNED_SORTED} > ${ALIGNED_SORTED_INDEXED}
 
+# Create sequence coverage track
 ${SEQ_COVERAGE}.wig:
 	source ./.venv/bin/activate; python3 sequence_coverage.py ${ALIGNED_SAM} 3079196 > ${SEQ_COVERAGE}.wig
 
+# Create physical coverage track
 ${PHYSICAL_COVERAGE}.wig:
 	source ./.venv/bin/activate; python3 physical_coverage.py ${ALIGNED_SAM} 3079196 > ${PHYSICAL_COVERAGE}.wig
+
+# Create single mates track
+${SINGLE_MATES}.wig:
+	source ./.venv/bin/activate; python3 single_mates.py ${ALIGNED_SAM} 3079196 > ${SINGLE_MATES}.wig
 
 ### **********************************************************
 ### UTILS
@@ -73,5 +80,6 @@ clear:
 	# Remove .wig files
 	rm -f ${SEQ_COVERAGE}.wig
 	rm -f ${PHYSICAL_COVERAGE}.wig
+	rm -f ${SINGLE_MATES}.wig
 
 .PHONY: clear clean
