@@ -29,6 +29,28 @@ genome_change = [0]*genome_length
 # Open sam file
 sam_file = open(input_file)
 
+def get_tlen_distance():
+
+	# bisogna verificare che entrambi i mate mappino
+	#bisogna verificare che non mappino troppo grandi (<20000)
+	tlen_sum = 0
+	tlen_mean = 0
+
+	# Compute mean template legth (mate pair distance)
+	for line in sam_file:
+		if line[0] == '@':
+			continue
+		
+		fields = line.split("\t")   # makes a list of individual tab-separated fields
+
+		# mate pairs distance
+		tlen =  int(fields[8])  # observed template length 
+
+		if tlen < 0: 
+			continue
+	
+
+
 # Compute sequence coverage
 for line in sam_file:
 	if line[0] == '@':
@@ -43,7 +65,7 @@ for line in sam_file:
 	seq =   fields[9]       # segment sequence
  
 	# Both reads align correctly and len is greater than zero
-	if ((flag & 4) == 0 and tlen > 0):   # flag unset indicates that segment maps 
+	if ((flag & 4) == 0 and (tlen > 0 and tlen < 20000)):   # flag unset indicates that segment maps 
 		# Increment start position by one
 		genome_change[pos] += 1
 		# Decrement fragment end position by one
