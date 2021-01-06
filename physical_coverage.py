@@ -53,7 +53,7 @@ for line in sam_file:
 sam_file.close()
 	
 # Print genomic profile as a wiggle file
-logging.info("fixedStep chrom=genome start=1 step=1 span=1")
+print("fixedStep chrom=genome start=1 step=1 span=1")
 
 current_coverage = 0
 
