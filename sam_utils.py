@@ -3,14 +3,21 @@ FLAG_SEGMENT_UNMAPPED = 4
 FLAG_NEXT_SEGMENT_UNMAPPED = 8
 
 
-def read_mates(input_file: str, raw_fields: bool = False, keep_comments: bool = False):
+def read_mates(
+    input_file: str, 
+    raw_fields: bool = False, 
+    keep_comments: bool = False, 
+    keep_fields = ["qname", "flag", "rname", "pos", "mapq", "cigar", "rnext", "pnext", "tlen", "seq", "qual", ]):
+    
     """
     Return a list of dict where every entry is representing a field from the
     sam file.
 
     :param raw_fields: Allow to do not unpack fields and get the whole text line
     :param keep_comments: Allow to keep comments in sam file, i.e, line with `@` at the beginning
+    :param keep_fields: Allot to keep only a subset of fields. By default it keeps all fields.
     """
+    
     with open(input_file) as f:
         lines = f.readlines()
 
@@ -22,17 +29,17 @@ def read_mates(input_file: str, raw_fields: bool = False, keep_comments: bool = 
                 values = line.split("\t")
 
                 fields = {
-                    "qname": values[0],
-                    "flag": int(values[1]),
-                    "rname": values[2],
-                    "pos": int(values[3]),
-                    "mapq": int(values[4]),
-                    "cigar": values[5],
-                    "rnext": values[6],
-                    "pnext": int(values[7]),
-                    "tlen": int(values[8]),
-                    "seq": values[9],
-                    "qual": values[10]
+                    **( { "qname":      values[0]  }  if "qname" in keep_fields else {}),
+                    **( { "flag":   int(values[1]) }  if "flag"  in keep_fields else {}),
+                    **( { "rname":      values[2]  }  if "rname" in keep_fields else {}),
+                    **( { "pos":    int(values[3]) }  if "pos"   in keep_fields else {}),
+                    **( { "mapq":   int(values[4]) }  if "mapq"  in keep_fields else {}),
+                    **( { "cigar":      values[5]  }  if "cigar" in keep_fields else {}),
+                    **( { "rnext":      values[6]  }  if "rnext" in keep_fields else {}),
+                    **( { "pnext":  int(values[7]) }  if "pnext" in keep_fields else {}),
+                    **( { "tlen":   int(values[8]) }  if "tlen"  in keep_fields else {}),
+                    **( { "seq":        values[9]  }  if "seq"   in keep_fields else {}),
+                    **( { "qual":       values[10] }  if "qual"  in keep_fields else {}),
                 }
 
                 return fields
