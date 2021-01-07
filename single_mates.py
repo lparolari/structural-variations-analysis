@@ -7,6 +7,9 @@ from sam_utils import FLAG_UNSET, FLAG_SEGMENT_UNMAPPED, FLAG_NEXT_SEGMENT_UNMAP
 from sam_utils import read_mates, to_wig
 
 
+MATE_LENGTH = 100
+
+
 def print_usage(argv):
     print(f"Syntax: {argv[0]} FILE.sam GENOME_LENGTH")
     print()
@@ -53,7 +56,7 @@ def get_tlen_distribution_params(mates):
     and leq 2000. Two mates must map in order to use their template length.
     """
 
-    add_second_read_length = lambda mate: mate["tlen"] + len(mate["seq"]) 
+    add_second_read_length = lambda mate: mate["tlen"] + MATE_LENGTH 
 
     tlens = list(filter(is_plausible_tlen, mates))
     tlens = list(filter(is_first_and_second_read_mapped, tlens))
@@ -104,7 +107,6 @@ def get_single_mates(mates, genome_length):
 
     for mate in mates:
         pos = mate["pos"]
-        seq = mate["seq"]
         
         if is_first_read_exlusively_mapped(mate):
             # First mate maps, while the second does not
@@ -112,7 +114,7 @@ def get_single_mates(mates, genome_length):
             unmapped_mate = mapped_mate + int(tlen_avg)
 
             single_mates[unmapped_mate] += 1
-            single_mates[unmapped_mate + len(seq)] -= 1
+            single_mates[unmapped_mate + MATE_LENGTH] -= 1
         
         if is_second_read_exlusively_mapped(mate):
             # First mate does not map, while the second does
@@ -120,7 +122,7 @@ def get_single_mates(mates, genome_length):
             unmapped_mate = mapped_mate - int(tlen_avg)
 
             single_mates[unmapped_mate] += 1
-            single_mates[unmapped_mate + len(seq)] -= 1
+            single_mates[unmapped_mate + MATE_LENGTH] -= 1
     
     return single_mates
 
@@ -163,7 +165,7 @@ if __name__ == "__main__":
     logging.debug(f"genome_length = {genome_length}")
 
     # Read mates
-    mates = read_mates(input_file)
+    mates = read_mates(input_file, keep_fields=["pos", "pnext", "tlen", "flag"])
 
     # Compute single mates percentage
     single_mates_percentage = get_single_mates_percentage(mates, genome_length)
