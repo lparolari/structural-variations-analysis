@@ -10,6 +10,7 @@ ALIGNED_SORTED_INDEXED=${ALIGNED}_sorted.bam.bai
 SEQ_COVERAGE=lact_seqcov
 PHYSICAL_COVERAGE=lact_physicalcov
 SINGLE_MATES=lact_singlemates
+AVG_FRAGMENTS_LENGTH=lact_avgfraglen
 
 ### **********************************************************
 ### MAIN TARGETS
@@ -63,6 +64,10 @@ ${PHYSICAL_COVERAGE}.wig:
 ${SINGLE_MATES}.wig:
 	source ./.venv/bin/activate; python3 single_mates.py ${ALIGNED_SAM} 3079196 > ${SINGLE_MATES}.wig
 
+# Create avg fragments length tracks
+${AVG_FRAGMENTS_LENGTH}.wig:
+	source ./.venv/bin/activate; python3 mean_fragments_length.py ${ALIGNED_SAM} 3079196 > ${AVG_FRAGMENTS_LENGTH}.wig
+
 ### **********************************************************
 ### UTILS
 
@@ -81,5 +86,6 @@ clear:
 	rm -f ${SEQ_COVERAGE}.wig
 	rm -f ${PHYSICAL_COVERAGE}.wig
 	rm -f ${SINGLE_MATES}.wig
+	rm -f ${AVG_FRAGMENTS_LENGTH}.wig
 
 .PHONY: clear clean
