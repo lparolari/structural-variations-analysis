@@ -16,8 +16,12 @@
 *.sam
 *.bam
 
-# Python venv
+# Python venv and cache
 .venv
+__pycache__
 
 # Tmp dir
 tmp
+
+# Vscode
+.vscode/.ropeproject
