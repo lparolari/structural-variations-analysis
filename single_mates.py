@@ -3,8 +3,8 @@ import logging
 import numpy as np
 from typing import List
 
-FLAG_SEGMENT_UNMAPPED = 4
-FLAG_NEXT_SEGMENT_UNMAPPED = 8
+from sam_utils import FLAG_UNSET, FLAG_SEGMENT_UNMAPPED, FLAG_NEXT_SEGMENT_UNMAPPED
+from sam_utils import read_mates, to_wig
 
 
 def print_usage(argv):
@@ -20,84 +20,48 @@ def print_usage(argv):
     exit(1)
 
 
-def read_mates(input_file: str, raw_fields: bool = False, keep_comments: bool = False):
+def is_plausible_tlen(mate):
     """
-    Return a list of dict where every entry is representing a field from the
-    sam file.
-
-    :param raw_fields: Allow to do not unpack fields and get the whole text line
-    :param keep_comments: Allow to keep comments in sam file, i.e, line with `@` at the beginning
+    Returns true whether the tlen of the mate is geq 0 and leq 20000, false otherwise.
     """
-    with open(input_file) as f:
-        lines = f.readlines()
+    return (mate["tlen"] >= 0) and (mate["tlen"] <= 20000)
 
-        if not keep_comments:
-            lines = list(filter(lambda line: line[0] != "@", lines))
-        
-        if not raw_fields:
-            def split_fields(line):
-                values = line.split("\t")
-
-                fields = {
-                    "qname": values[0],
-                    "flag": int(values[1]),
-                    "rname": values[2],
-                    "pos": int(values[3]),
-                    "mapq": int(values[4]),
-                    "cigar": values[5],
-                    "rnext": values[6],
-                    "pnext": int(values[7]),
-                    "tlen": int(values[8]),
-                    "seq": values[9],
-                    "qual": values[10]
-                }
-
-                return fields
-
-            lines = list(map(split_fields, lines))
-        
-        return lines
-
-
-def is_first_read_unmapped(mate):
+def is_first_read_exlusively_mapped(mate):
     """
     Returns true whether the first read maps exclusively, false otherwise.
     """
     return (mate["flag"] & (FLAG_SEGMENT_UNMAPPED | FLAG_NEXT_SEGMENT_UNMAPPED)) == FLAG_SEGMENT_UNMAPPED
 
 
-def is_second_read_unmapped(mate): 
+def is_second_read_exlusively_mapped(mate): 
     """
     Returns true whether the second read maps exclusively, false otherwise.
     """
     return (mate["flag"] & (FLAG_SEGMENT_UNMAPPED | FLAG_NEXT_SEGMENT_UNMAPPED)) == FLAG_NEXT_SEGMENT_UNMAPPED
     
 
-def is_first_or_second_unmapped(mate): 
+def is_first_and_second_read_mapped(mate): 
     """
-    Returns true whether first read maps exclusively or second read maps esclusively,
-    false otherwise.
+    Returns true whether first and second read are mapped, false otherwise.
     """
-    return is_first_read_unmapped(mate) or is_second_read_unmapped(mate)
+    return (mate["flag"] & (FLAG_SEGMENT_UNMAPPED | FLAG_NEXT_SEGMENT_UNMAPPED)) == FLAG_UNSET
 
 
 def get_tlen_distribution_params(mates):
     """
-    Returns the average and standard deviation of template length only for 
-    mates with tlen
-    * >= 0
-    * <= 20000
-    * only one of the two mates maps
-    
-    Please note that avg and std are calculated on unmapped tlen.
+    Returns the average and standard deviation of mates with template length geq 0
+    and leq 2000. Two mates must map in order to use their template length.
     """
 
-    tlens = list(filter(lambda mate: (mate["tlen"] >= 0) and (mate["tlen"] <= 20000), mates))
-    tlens = list(filter(lambda mate: is_first_or_second_unmapped, tlens))
-    tlens = list(map(lambda mate: mate["tlen"] + len(mate["seq"]), tlens))
+    add_second_read_length = lambda mate: mate["tlen"] + len(mate["seq"]) 
 
-    logging.debug(f"len(tlens) = {len(tlens)}")
+    tlens = list(filter(is_plausible_tlen, mates))
+    tlens = list(filter(is_first_and_second_read_mapped, tlens))
+    tlens = list(map(add_second_read_length, tlens))
 
+    logging.debug(f"number_of_mapping_reads = {len(tlens)}")
+
+    # Get mean and std
     tlen_avg = np.mean(np.array(tlens))
     tlen_std = np.std(np.array(tlens))
 
@@ -110,7 +74,15 @@ def get_single_mates_count(mates):
     two maps.
     """
 
-    return len(list(filter(is_first_or_second_unmapped, mates)))
+    # Get the number of mates where, respectively, the first read maps exclusively and
+    # the second read maps exclusively
+    singles_first_no = len(list(filter(is_first_read_exlusively_mapped, mates)))
+    singles_second_no = len(list(filter(is_second_read_exlusively_mapped, mates)))
+
+    # Sum the two counts
+    single_mates_no = singles_first_no + singles_second_no
+
+    return single_mates_no
 
 
 def get_single_mates(mates, genome_length):
@@ -131,11 +103,10 @@ def get_single_mates(mates, genome_length):
     single_mates = [0] * genome_length
 
     for mate in mates:
-        flag = mate["flag"]
         pos = mate["pos"]
         seq = mate["seq"]
         
-        if ((flag & (FLAG_SEGMENT_UNMAPPED | FLAG_NEXT_SEGMENT_UNMAPPED)) == FLAG_NEXT_SEGMENT_UNMAPPED):
+        if is_first_read_exlusively_mapped(mate):
             # First mate maps, while the second does not
             mapped_mate = pos
             unmapped_mate = mapped_mate + int(tlen_avg)
@@ -143,7 +114,7 @@ def get_single_mates(mates, genome_length):
             single_mates[unmapped_mate] += 1
             single_mates[unmapped_mate + len(seq)] -= 1
         
-        if ((flag & (FLAG_SEGMENT_UNMAPPED | FLAG_NEXT_SEGMENT_UNMAPPED)) == FLAG_NEXT_SEGMENT_UNMAPPED):
+        if is_second_read_exlusively_mapped(mate):
             # First mate does not map, while the second does
             mapped_mate = pos
             unmapped_mate = mapped_mate - int(tlen_avg)
@@ -176,20 +147,11 @@ def get_single_mates_percentage(mates, genome_length):
     return single_mates_percentage
 
 
-def to_wig(ls, step_type: str = "fixedStep", chrom: str = "genome", start: int = 1, step: int = 1, span: int = 1):
-    """
-    Prints to the standard output a list in wig format.
-    """
-    print(f"{step_type} chrom={chrom} start={start} step={step} span={span}")
-
-    for item in ls:
-        print(item)
-
-
-def main():
-
+if __name__ == "__main__":
+    # Set verbose logging
     logging.basicConfig(level=logging.DEBUG)
 
+    # Check args
     if len(sys.argv) != 1 + 2:
         print_usage(sys.argv)
 
@@ -208,7 +170,3 @@ def main():
 
     # Print single_mates_percentage in wig format
     to_wig(single_mates_percentage)
-
-
-if __name__ == "__main__":
-    main()
