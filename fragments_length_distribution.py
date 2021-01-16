@@ -3,7 +3,7 @@ import logging
 import matplotlib.pyplot as plt
 import numpy as np
 import pathlib
-import scipy
+from scipy import stats
 import sys
 from typing import List
 
@@ -38,31 +38,41 @@ def get_tlen_distribution_params(mates):
     return tlen_avg, tlen_std
 
 
-def plot_distribution(mu, std):
-    """
-    Plo
-    """
-    from scipy import stats
+def get_distribution_space(mu, std):
+    # We want to keep a finite part of the distribution and
+    # we keep only values between `± 3 * std` from `mu`.
+    # This values are in 99.7% pdf.
 
-    # We want to plot a finite part of the distribution and
-    # we keep only points between `± 3 * std` from `mu`.
-    # This values are the 99.7% of all values.
-    x = np.linspace(mu - 3 * std, mu + 3 * std, 100)
+    return np.linspace(mu - 3 * std, mu + 3 * std, 100)
 
-    # We generate the pdf
-    y = stats.norm.pdf(x, mu, std)
 
-    assert np.abs(1 - np.trapz(y, x=x)) < 0.01, "Integral of distrib not equal to 1"
+def get_probability_for_insertion(x, mu, std):
+    # stats.norm.cdf is the cumulative distrib function
+    return stats.norm.cdf(x, mu, std)
 
+
+def get_probability_for_deletion(x, mu, std):
+    # stats.norm.sf is the survival function
+    return stats.norm.sf(x, mu, std)
+
+
+def plot_and_save(x, y, name="plot"):
+    plt.title(name)
     plt.plot(x, y)
-    plt.savefig("fragments-length-distribution.png")
+    plt.savefig(f"{name}.png")
+    plt.close()
 
 
 if __name__ == "__main__":
-    parser = argparse.ArgumentParser(description="Saves to fragment-length-distribution.png a plot with fragments length distribution.")
+    parser = argparse.ArgumentParser(description="""
+        Computes the probability distribution for fragments length and plots 
+        two charts respectively with probability of insertion and deletion
+        
+        """)
 
     parser.add_argument("file", type=pathlib.Path, help="A .sam file")
     parser.add_argument("genome_length", type=int, help="Genome length")
+    parser.add_argument("--plot", type=bool, default=False, help="Plot and save distributionssssssssssssssss")
     parser.add_argument("--verbose", type=bool, default=False, help="Verbose output")
 
     # Get args
@@ -85,4 +95,9 @@ if __name__ == "__main__":
     mu, std = get_tlen_distribution_params(mates)
 
     # Plot distribution
-    plot_distribution(mu, std)
+    x = get_distribution_space(mu, std)
+    prob_insertion = get_probability_for_insertion(x, mu, std)
+    prob_deletion = get_probability_for_deletion(x, mu, std)
+
+    plot_and_save(x, prob_insertion, name="probaility-for-insertion")
+    plot_and_save(x, prob_deletion, name="probaility-for-deletion")
