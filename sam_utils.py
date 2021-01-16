@@ -2,6 +2,8 @@ FLAG_UNSET = 0
 FLAG_SEGMENT_UNMAPPED = 4
 FLAG_NEXT_SEGMENT_UNMAPPED = 8
 
+FLAG_SEGMENT_REVERSE_COMPLEMENTED = 16
+FLAG_NEXT_SEGMENT_REVERSE_COMPLEMENTED = 32
 
 MATE_LENGTH = 100
 
@@ -96,6 +98,19 @@ def is_first_and_second_read_mapped(mate):
     false otherwise.
     """
     return (mate["flag"] & (FLAG_SEGMENT_UNMAPPED | FLAG_NEXT_SEGMENT_UNMAPPED)) == FLAG_UNSET
+
+
+def is_mapping_fr(mate):
+    """
+    Returns true whether reads mapping with FR schema, 
+    false otherwise (i.e, RF, FF, RR schema)
+    """
+    flag = mate['flag']
+
+    first_is_f = (flag & FLAG_SEGMENT_REVERSE_COMPLEMENTED) == 0
+    second_is_r = (flag & FLAG_NEXT_SEGMENT_REVERSE_COMPLEMENTED) == FLAG_NEXT_SEGMENT_REVERSE_COMPLEMENTED
+
+    return first_is_f and second_is_r
 
 
 def filter_out_invalid_mates(mates):
