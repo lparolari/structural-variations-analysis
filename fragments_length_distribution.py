@@ -14,6 +14,8 @@ from sam_utils import filter_out_invalid_mates
 from sam_utils import is_first_and_second_read_mapped
 from sam_utils import is_first_read_exlusively_mapped, is_second_read_exlusively_mapped
 
+from mean_fragments_length import get_avg_fragments_length
+
 
 def get_tlen_distribution_params(mates):
     """
@@ -39,6 +41,11 @@ def get_tlen_distribution_params(mates):
 
 
 def get_distribution_space(mu, std):
+    """
+    Return a mock space for a basic pdf centered in `mu` with samples 
+    between `± 3 * std`.
+    """
+
     # We want to keep a finite part of the distribution and
     # we keep only values between `± 3 * std` from `mu`.
     # This values are in 99.7% pdf.
@@ -47,16 +54,31 @@ def get_distribution_space(mu, std):
 
 
 def get_probability_for_insertion(x, mu, std):
+    """
+    Return the probability of `x` to be an insertion based on the pdf
+    obtained by `mu` and `std`.
+
+    Please note that `x` can be an array.
+    """
     # stats.norm.cdf is the cumulative distrib function
     return stats.norm.cdf(x, mu, std)
 
 
 def get_probability_for_deletion(x, mu, std):
+    """
+    Return the probability of `x` to be a deletion based on the pdf
+    obtained by `mu` and `std`.
+
+    Please note that `x` can be an array.
+    """
     # stats.norm.sf is the survival function
     return stats.norm.sf(x, mu, std)
 
 
 def plot_and_save(x, y, name="plot"):
+    """
+    Plot given `x`, `y` and saves the chart with name `name` in png format.
+    """
     plt.title(name)
     plt.plot(x, y)
     plt.savefig(f"{name}.png")
@@ -66,14 +88,20 @@ def plot_and_save(x, y, name="plot"):
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="""
         Computes the probability distribution for fragments length and plots 
-        two charts respectively with probability of insertion and deletion
-        
-        """)
+        two charts respectively with probability of insertion and deletion or
+        produces two tracks.
+    """)
 
+    # Main args
     parser.add_argument("file", type=pathlib.Path, help="A .sam file")
     parser.add_argument("genome_length", type=int, help="Genome length")
-    parser.add_argument("--plot", type=bool, default=False, help="Plot and save distributionssssssssssssssss")
+    
+    # Options
     parser.add_argument("--verbose", type=bool, default=False, help="Verbose output")
+    parser.add_argument("--plot", type=bool, default=False, 
+        help="Plot and save chart with probability distribution for insertions and deletions")
+    parser.add_argument("--track", choices=["insertion", "deletion"],
+        help="""Compute the probability to be an insertion/deletion for every genomic position and prints it as a wig track""")
 
     # Get args
     args = parser.parse_args()
@@ -81,11 +109,19 @@ if __name__ == "__main__":
     input_file = args.file
     genome_length = args.genome_length
     verbose = args.verbose
-    
-    logging.basicConfig(level=(logging.DEBUG if verbose else None))
+    plot = args.plot
+    track = args.track
 
+    # Set loggin level
+    logging.basicConfig(level=(logging.DEBUG if verbose else None))
+    
     logging.debug(f"input_file = {input_file}")
     logging.debug(f"genome_length = {genome_length}")
+
+    # Check if we have a task to do
+    if not plot and not track:
+        logging.warning("Nothing to do, maybe you should specify --plot or --track")
+        exit(0)
 
     # Read mates
     mates = read_mates(input_file, keep_fields=["pos", "pnext", "tlen", "flag"])
@@ -95,9 +131,26 @@ if __name__ == "__main__":
     mu, std = get_tlen_distribution_params(mates)
 
     # Plot distribution
-    x = get_distribution_space(mu, std)
-    prob_insertion = get_probability_for_insertion(x, mu, std)
-    prob_deletion = get_probability_for_deletion(x, mu, std)
+    if plot:
+        x = get_distribution_space(mu, std)
+        prob_insertion = get_probability_for_insertion(x, mu, std)
+        prob_deletion = get_probability_for_deletion(x, mu, std)
 
-    plot_and_save(x, prob_insertion, name="probaility-for-insertion")
-    plot_and_save(x, prob_deletion, name="probaility-for-deletion")
+        plot_and_save(x, prob_insertion, name="probaility-for-insertion")
+        plot_and_save(x, prob_deletion, name="probaility-for-deletion")
+
+    if track == "insertion":
+        logging.info("Computing insertion probabilities...")
+
+        ls = get_avg_fragments_length(mates, genome_length)
+        ls = get_probability_for_insertion(ls, mu, std)
+
+        to_wig(ls)
+
+    if track == "deletion":
+        logging.info("Computing deletion probabilities...")
+        
+        ls = get_avg_fragments_length(mates, genome_length)
+        ls = get_probability_for_deletion(ls, mu, std)
+
+        to_wig(ls)
