@@ -11,6 +11,9 @@ SEQ_COVERAGE=lact_seqcov
 PHYSICAL_COVERAGE=lact_physicalcov
 SINGLE_MATES=lact_singlemates
 AVG_FRAGMENTS_LENGTH=lact_avgfraglen
+RELATIVE_ORIENTATIONS=lact_orientation
+PROB_INS=lact_probins
+PROB_DEL=lact_probdel
 
 ### **********************************************************
 ### MAIN TARGETS
@@ -68,6 +71,18 @@ ${SINGLE_MATES}.wig:
 ${AVG_FRAGMENTS_LENGTH}.wig:
 	source ./.venv/bin/activate; python3 mean_fragments_length.py ${ALIGNED_SAM} 3079196 > ${AVG_FRAGMENTS_LENGTH}.wig
 
+# Create relative orientation track
+${RELATIVE_ORIENTATIONS}.wig:
+	source ./.venv/bin/activate; python3 relative_orientation_reads.py ${ALIGNED_SAM} 3079196 > ${RELATIVE_ORIENTATIONS}.wig
+
+# Create prob ins track
+${PROB_INS}.wig:
+	source ./.venv/bin/activate; python3 fragments_length_distribution.py ${ALIGNED_SAM} 3079196 --track insertion > ${PROB_INS}.wig
+
+# Create prob del track
+${PROB_DEL}.wig:
+	source ./.venv/bin/activate; python3 fragments_length_distribution.py ${ALIGNED_SAM} 3079196 --track deletion > ${PROB_DEL}.wig
+
 ### **********************************************************
 ### UTILS
 
@@ -87,5 +102,8 @@ clear:
 	rm -f ${PHYSICAL_COVERAGE}.wig
 	rm -f ${SINGLE_MATES}.wig
 	rm -f ${AVG_FRAGMENTS_LENGTH}.wig
+	rm -f ${RELATIVE_ORIENTATIONS}.wig
+	rm -f ${PROB_INS}.wig
+	rm -f ${PROB_DEL}.wig
 
 .PHONY: clear clean
