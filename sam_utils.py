@@ -3,6 +3,9 @@ FLAG_SEGMENT_UNMAPPED = 4
 FLAG_NEXT_SEGMENT_UNMAPPED = 8
 
 
+MATE_LENGTH = 100
+
+
 def read_mates(
     input_file: str, 
     raw_fields: bool = False, 
@@ -49,7 +52,6 @@ def read_mates(
         return lines
 
 
-
 def to_wig(ls, step_type: str = "fixedStep", chrom: str = "genome", start: int = 1, step: int = 1, span: int = 1):
     """
     Prints to the standard output a list in wig format.
@@ -58,3 +60,46 @@ def to_wig(ls, step_type: str = "fixedStep", chrom: str = "genome", start: int =
 
     for item in ls:
         print(item)
+
+
+def is_plausible_tlen(min_tlen = 0, max_tlen = 20000):
+    """
+    Returns true whether the tlen of mates is geq `min_tlen` and
+    leq `max_tlen`, false otherwise.
+    """
+
+    def is_plausible_tlen_fixed(mate):
+        return (mate["tlen"] >= min_tlen) and (mate["tlen"] <= max_tlen)
+
+    return is_plausible_tlen_fixed
+    
+
+def is_first_read_exlusively_mapped(mate):
+    """
+    Returns true whether the first read maps exclusively, 
+    false otherwise.
+    """
+    return (mate["flag"] & (FLAG_SEGMENT_UNMAPPED | FLAG_NEXT_SEGMENT_UNMAPPED)) == FLAG_SEGMENT_UNMAPPED
+
+
+def is_second_read_exlusively_mapped(mate): 
+    """
+    Returns true whether the second read maps exclusively, 
+    false otherwise.
+    """
+    return (mate["flag"] & (FLAG_SEGMENT_UNMAPPED | FLAG_NEXT_SEGMENT_UNMAPPED)) == FLAG_NEXT_SEGMENT_UNMAPPED
+    
+
+def is_first_and_second_read_mapped(mate): 
+    """
+    Returns true whether first and second read are mapped, 
+    false otherwise.
+    """
+    return (mate["flag"] & (FLAG_SEGMENT_UNMAPPED | FLAG_NEXT_SEGMENT_UNMAPPED)) == FLAG_UNSET
+
+
+def filter_out_invalid_mates(mates):
+    """
+    Remove mates with implausible tlen.
+    """
+    return list(filter(is_plausible_tlen(), mates))

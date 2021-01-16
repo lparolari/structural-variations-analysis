@@ -4,11 +4,10 @@ import sys
 import logging
 
 from sam_utils import FLAG_SEGMENT_UNMAPPED, FLAG_NEXT_SEGMENT_UNMAPPED, FLAG_UNSET
+from sam_utils import MATE_LENGTH
 from sam_utils import read_mates, to_wig
-
-
-MAX_ACCEPTED_TLEN = 20000
-MATE_LENGTH = 100
+from sam_utils import filter_out_invalid_mates
+from sam_utils import is_first_and_second_read_mapped
 
 
 def print_usage():
@@ -26,24 +25,12 @@ def print_usage():
     print(f"  $ {sys.argv[0]} lact.sam 3079196 > lact_physicalcov.wig")
 
 
-def is_first_and_second_read_mapped(mate):
-    return (mate["flag"] & (FLAG_SEGMENT_UNMAPPED | FLAG_NEXT_SEGMENT_UNMAPPED)) == FLAG_UNSET
-
-
-def filter_out_invalid_mates(mates):
-    is_tlen_geq_zero = lambda mate: mate["tlen"] >= 0
-    is_tlen_leq_x = lambda x: lambda mate: mate["tlen"] <= x
-
-    mates = list(filter(is_tlen_geq_zero, mates))
-    mates = list(filter(is_tlen_leq_x(MAX_ACCEPTED_TLEN), mates))
-
-    return mates
-
-
 def get_physical_change(mates, genome_length):
+    """
+    Return an array where every genomic position represents the 
+    number of mates starting at that genomic position.
+    """
     genome_physical_change = [0] * genome_length
-
-    mates = filter_out_invalid_mates(mates)
 
     for mate in mates:
         pos = mate["pos"]
@@ -61,9 +48,12 @@ def get_physical_change(mates, genome_length):
 
 
 def get_sum_fragment_change(mates, genome_length):
+    """
+    Return an array where every genomic position represents the sum
+    of the length of fragments with the first mate starting at that
+    genomic position.
+    """
     genome_sum_fragment_change = [0] * genome_length
-
-    mates = filter_out_invalid_mates(mates)
 
     for mate in mates:
         pos = mate["pos"]
@@ -82,7 +72,16 @@ def get_sum_fragment_change(mates, genome_length):
     return genome_sum_fragment_change
 
 
-def get_physical_coverage(mates, genome_length):
+def get_physical_coverage_percentage(mates, genome_length):
+    """
+    Return an array with physical coverage percentage for every
+    genomic position.
+
+    Parameters
+    ----------
+    * mates: A list of plausible mates.
+    * genome_length: Length of genome.
+    """
     genome_physical_coverage = []
 
     genome_physical_change = get_physical_change(mates, genome_length)
@@ -119,12 +118,16 @@ if __name__ == "__main__":
     input_file = sys.argv[1]
     genome_length = int(sys.argv[2])
 
+    logging.debug(f"input_file = {input_file}")
+    logging.debug(f"genome_length = {genome_length}")
+
     # Get mates
     mates = read_mates(input_file, keep_fields=["pos", "pnext", "flag", "tlen"])
+    mates = filter_out_invalid_mates(mates)
 
     # Compute physical coverage
-    physical_coverage = get_physical_coverage(mates, genome_length)
-    assert len(physical_coverage) == genome_length, f"Track length must be equal to genome lenth, but {len(physical_coverage)} != {genome_length}"
+    physical_coverage_percentage = get_physical_coverage_percentage(mates, genome_length)
+    assert len(physical_coverage_percentage) == genome_length, f"Track length must be equal to genome lenth, but {len(physical_coverage_percentage)} != {genome_length}"
 
     # Print to wig file
-    to_wig(physical_coverage)
+    to_wig(physical_coverage_percentage)

@@ -4,10 +4,10 @@ import numpy as np
 from typing import List
 
 from sam_utils import FLAG_UNSET, FLAG_SEGMENT_UNMAPPED, FLAG_NEXT_SEGMENT_UNMAPPED
+from sam_utils import MATE_LENGTH
 from sam_utils import read_mates, to_wig
-
-
-MATE_LENGTH = 100
+from sam_utils import filter_out_invalid_mates
+from sam_utils import is_first_and_second_read_mapped
 
 
 def print_usage(argv):
@@ -20,20 +20,6 @@ def print_usage(argv):
     print(f"  $ {argv[0]} lact.sam 3079196")
     print(f"  $ {argv[0]} lact.sam 3079196 > lact_avgfraglen.wig")
     exit(1)
-
-
-def is_plausible_tlen(mate):
-    """
-    Returns true whether the tlen of the mate is geq 0 and leq 20000, false otherwise.
-    """
-    return (mate["tlen"] >= 0) and (mate["tlen"] <= 20000)
-
-
-def is_first_and_second_read_mapped(mate): 
-    """
-    Returns true whether first and second read are mapped, false otherwise.
-    """
-    return (mate["flag"] & (FLAG_SEGMENT_UNMAPPED | FLAG_NEXT_SEGMENT_UNMAPPED)) == FLAG_UNSET
 
 
 def get_framents_length(mates, genome_length):
@@ -63,6 +49,9 @@ def get_framents_length(mates, genome_length):
 
 
 def get_physical_coverage(mates, genome_length):
+    """
+    Return the physical coverage for mates without percentage.
+    """    
     physical_coverage = [0] * genome_length
 
     for mate in mates:
@@ -81,6 +70,10 @@ def get_physical_coverage(mates, genome_length):
 
 
 def get_avg_fragments_length(mates, genome_length):
+    """
+    Return an array where every genomic position represents the average
+    length of fragments at that position.
+    """
     avg_fragments_length = [0] * genome_length
 
     physical_coverage = get_physical_coverage(mates, genome_length)
@@ -120,7 +113,7 @@ if __name__ == "__main__":
 
     # Read mates
     mates = read_mates(input_file, keep_fields=["pos", "pnext", "tlen", "flag"])
-    mates = list(filter(is_plausible_tlen, mates))
+    mates = filter_out_invalid_mates(mates)
 
     # Compute avg frag length
     avg_fragments_length = get_avg_fragments_length(mates, genome_length)

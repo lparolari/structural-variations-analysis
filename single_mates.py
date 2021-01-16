@@ -4,10 +4,11 @@ import numpy as np
 from typing import List
 
 from sam_utils import FLAG_UNSET, FLAG_SEGMENT_UNMAPPED, FLAG_NEXT_SEGMENT_UNMAPPED
+from sam_utils import MATE_LENGTH
 from sam_utils import read_mates, to_wig
-
-
-MATE_LENGTH = 100
+from sam_utils import filter_out_invalid_mates
+from sam_utils import is_first_and_second_read_mapped
+from sam_utils import is_first_read_exlusively_mapped, is_second_read_exlusively_mapped
 
 
 def print_usage(argv):
@@ -23,33 +24,6 @@ def print_usage(argv):
     exit(1)
 
 
-def is_plausible_tlen(mate):
-    """
-    Returns true whether the tlen of the mate is geq 0 and leq 20000, false otherwise.
-    """
-    return (mate["tlen"] >= 0) and (mate["tlen"] <= 20000)
-
-def is_first_read_exlusively_mapped(mate):
-    """
-    Returns true whether the first read maps exclusively, false otherwise.
-    """
-    return (mate["flag"] & (FLAG_SEGMENT_UNMAPPED | FLAG_NEXT_SEGMENT_UNMAPPED)) == FLAG_SEGMENT_UNMAPPED
-
-
-def is_second_read_exlusively_mapped(mate): 
-    """
-    Returns true whether the second read maps exclusively, false otherwise.
-    """
-    return (mate["flag"] & (FLAG_SEGMENT_UNMAPPED | FLAG_NEXT_SEGMENT_UNMAPPED)) == FLAG_NEXT_SEGMENT_UNMAPPED
-    
-
-def is_first_and_second_read_mapped(mate): 
-    """
-    Returns true whether first and second read are mapped, false otherwise.
-    """
-    return (mate["flag"] & (FLAG_SEGMENT_UNMAPPED | FLAG_NEXT_SEGMENT_UNMAPPED)) == FLAG_UNSET
-
-
 def get_tlen_distribution_params(mates):
     """
     Returns the average and standard deviation of mates with template length geq 0
@@ -58,7 +32,7 @@ def get_tlen_distribution_params(mates):
 
     add_second_read_length = lambda mate: mate["tlen"] + MATE_LENGTH 
 
-    tlens = list(filter(is_plausible_tlen, mates))
+    tlens = mates
     tlens = list(filter(is_first_and_second_read_mapped, tlens))
     tlens = list(map(add_second_read_length, tlens))
 
@@ -166,9 +140,11 @@ if __name__ == "__main__":
 
     # Read mates
     mates = read_mates(input_file, keep_fields=["pos", "pnext", "tlen", "flag"])
+    mates = filter_out_invalid_mates(mates)
 
     # Compute single mates percentage
     single_mates_percentage = get_single_mates_percentage(mates, genome_length)
+    assert len(single_mates_percentage) == genome_length, f"Track length must be equal to genome lenth, but {len(single_mates_percentage)} != {genome_length}"
 
     # Print single_mates_percentage in wig format
     to_wig(single_mates_percentage)
