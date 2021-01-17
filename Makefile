@@ -1,5 +1,6 @@
 SHELL=/bin/bash
 GENOME=Lactobacillus_casei_genome
+GENOME_LENGTH=3079196
 READ_1=lact_sp.read1
 READ_2=lact_sp.read2
 ALIGNED=lact
@@ -14,6 +15,7 @@ AVG_FRAGMENTS_LENGTH=lact_avgfraglen
 RELATIVE_ORIENTATIONS=lact_orientation
 PROB_INS=lact_probins
 PROB_DEL=lact_probdel
+MULTIPLE_ALIGNMENTS=lact_multiplealignments
 
 ### **********************************************************
 ### MAIN TARGETS
@@ -57,31 +59,31 @@ ${ALIGNED_SORTED_INDEXED}: ${ALIGNED_SORTED}
 
 # Create sequence coverage track
 ${SEQ_COVERAGE}.wig:
-	source ./.venv/bin/activate; python3 sequence_coverage.py ${ALIGNED_SAM} 3079196 > ${SEQ_COVERAGE}.wig
+	source ./.venv/bin/activate; python3 sequence_coverage.py ${ALIGNED_SAM} ${GENOME_LENGTH} > ${SEQ_COVERAGE}.wig
 
 # Create physical coverage track
 ${PHYSICAL_COVERAGE}.wig:
-	source ./.venv/bin/activate; python3 physical_coverage.py ${ALIGNED_SAM} 3079196 > ${PHYSICAL_COVERAGE}.wig
+	source ./.venv/bin/activate; python3 physical_coverage.py ${ALIGNED_SAM} ${GENOME_LENGTH} > ${PHYSICAL_COVERAGE}.wig
 
 # Create single mates track
 ${SINGLE_MATES}.wig:
-	source ./.venv/bin/activate; python3 single_mates.py ${ALIGNED_SAM} 3079196 > ${SINGLE_MATES}.wig
+	source ./.venv/bin/activate; python3 single_mates.py ${ALIGNED_SAM} ${GENOME_LENGTH} > ${SINGLE_MATES}.wig
 
 # Create avg fragments length tracks
 ${AVG_FRAGMENTS_LENGTH}.wig:
-	source ./.venv/bin/activate; python3 mean_fragments_length.py ${ALIGNED_SAM} 3079196 > ${AVG_FRAGMENTS_LENGTH}.wig
+	source ./.venv/bin/activate; python3 mean_fragments_length.py ${ALIGNED_SAM} ${GENOME_LENGTH} > ${AVG_FRAGMENTS_LENGTH}.wig
 
 # Create relative orientation track
 ${RELATIVE_ORIENTATIONS}.wig:
-	source ./.venv/bin/activate; python3 relative_orientation_reads.py ${ALIGNED_SAM} 3079196 > ${RELATIVE_ORIENTATIONS}.wig
+	source ./.venv/bin/activate; python3 relative_orientation_reads.py ${ALIGNED_SAM} ${GENOME_LENGTH} > ${RELATIVE_ORIENTATIONS}.wig
 
 # Create prob ins track
 ${PROB_INS}.wig:
-	source ./.venv/bin/activate; python3 fragments_length_distribution.py ${ALIGNED_SAM} 3079196 --track insertion > ${PROB_INS}.wig
+	source ./.venv/bin/activate; python3 fragments_length_distribution.py ${ALIGNED_SAM} ${GENOME_LENGTH} --track insertion > ${PROB_INS}.wig
 
 # Create prob del track
 ${PROB_DEL}.wig:
-	source ./.venv/bin/activate; python3 fragments_length_distribution.py ${ALIGNED_SAM} 3079196 --track deletion > ${PROB_DEL}.wig
+	source ./.venv/bin/activate; python3 fragments_length_distribution.py ${ALIGNED_SAM} ${GENOME_LENGTH} --track deletion > ${PROB_DEL}.wig
 
 ### **********************************************************
 ### UTILS
