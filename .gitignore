@@ -8,6 +8,7 @@
 *.pac
 *.sa
 *.fai
+*.bai
 
 # Genome files
 *.fasta
