@@ -12,7 +12,7 @@ def read_mates(
     input_file: str, 
     raw_fields: bool = False, 
     keep_comments: bool = False, 
-    keep_fields = ["qname", "flag", "rname", "pos", "mapq", "cigar", "rnext", "pnext", "tlen", "seq", "qual", ]):
+    keep_fields = ["qname", "flag", "rname", "pos", "mapq", "cigar", "rnext", "pnext", "tlen", "seq", "qual", "ma", ]):
     
     """
     Return a list of dict where every entry is representing a field from the
@@ -30,6 +30,17 @@ def read_mates(
             lines = list(filter(lambda line: line[0] != "@", lines))
         
         if not raw_fields:
+            def is_xa_field(values):
+                return len(values) >= 17 and "XA" in values[16]
+
+            def split_ma(ma):
+                # split XA field by ; and discard the latest item which is empty
+                ma = ma.split(";")[:-1]
+                # split each aligment by , to get real values
+                ma = list(map(lambda a: a.split(","), ma))
+
+                return ma
+
             def split_fields(line):
                 values = line.split("\t")
 
@@ -45,6 +56,8 @@ def read_mates(
                     **( { "tlen":   int(values[8]) }  if "tlen"  in keep_fields else {}),
                     **( { "seq":        values[9]  }  if "seq"   in keep_fields else {}),
                     **( { "qual":       values[10] }  if "qual"  in keep_fields else {}),
+                    
+                    **( { "ma": split_ma(values[16]) if is_xa_field(values) else [] } if "ma" in keep_fields else {}),
                 }
 
                 return fields

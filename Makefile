@@ -85,6 +85,11 @@ ${PROB_INS}.wig:
 ${PROB_DEL}.wig:
 	source ./.venv/bin/activate; python3 fragments_length_distribution.py ${ALIGNED_SAM} ${GENOME_LENGTH} --track deletion > ${PROB_DEL}.wig
 
+# Create multiple alignments track
+${MULTIPLE_ALIGNMENTS}.wig:
+	source ./.venv/bin/activate; python3 multiple_alignments.py ${ALIGNED_SAM} ${GENOME_LENGTH} > ${MULTIPLE_ALIGNMENTS}.wig
+
+
 ### **********************************************************
 ### UTILS
 
