@@ -118,7 +118,7 @@ clear:
 	rm -f ${RELATIVE_ORIENTATIONS}.wig
 	rm -f ${PROB_INS}.wig
 	rm -f ${PROB_DEL}.wig
-	rm .f ${MULTIPLE_ALIGNMENTS}.wig
-	rm .f ${HS_CLIPPING}.wig
+	rm -f ${MULTIPLE_ALIGNMENTS}.wig
+	rm -f ${HS_CLIPPING}.wig
 
 .PHONY: clear clean
