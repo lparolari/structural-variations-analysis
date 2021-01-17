@@ -18,9 +18,6 @@
 *.sam
 *.bam
 
-# IGV session
-*.xml
-
 # Python venv and cache
 .venv
 __pycache__
