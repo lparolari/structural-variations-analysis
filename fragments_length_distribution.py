@@ -53,10 +53,32 @@ def get_distribution_space(mu, std):
     return np.linspace(mu - 3 * std, mu + 3 * std, 100)
 
 
+def get_pdf(x, mu, std):
+    """
+    Return the `y` for pdf with mean `mu` and standard deviation `std`
+    for values on `x`.
+    """
+    return stats.norm.pdf(x, mu, std)
+
+
 def get_probability_for_insertion(x, mu, std):
     """
     Return the probability of `x` to be an insertion based on the pdf
-    obtained by `mu` and `std`.
+    obtained by `mu` and `std`. Probability of insertion is higher if
+    average fragments length is less than `mu`.
+
+    Please note that `x` can be an array.
+    """
+    # stats.norm.sf is the survival function
+    
+    return stats.norm.sf(x, mu, std)
+
+
+def get_probability_for_deletion(x, mu, std):
+    """
+    Return the probability of `x` to be a deletion based on the pdf
+    obtained by `mu` and `std`. Probability of deletion is higher if
+    average fragments length is more than `mu`.
 
     Please note that `x` can be an array.
     """
@@ -64,23 +86,38 @@ def get_probability_for_insertion(x, mu, std):
     return stats.norm.cdf(x, mu, std)
 
 
-def get_probability_for_deletion(x, mu, std):
-    """
-    Return the probability of `x` to be a deletion based on the pdf
-    obtained by `mu` and `std`.
+def plot_pdf(x, y, mu, std):
+    name = f"probability density function"
 
-    Please note that `x` can be an array.
-    """
-    # stats.norm.sf is the survival function
-    return stats.norm.sf(x, mu, std)
-
-
-def plot_and_save(x, y, name="plot"):
-    """
-    Plot given `x`, `y` and saves the chart with name `name` in png format.
-    """
     plt.title(name)
-    plt.plot(x, y)
+    plt.plot(x, y, label=f"pdf")
+    plt.legend()
+    plt.xlabel("fragments avg length")
+    plt.ylabel("density of probability")
+    plt.savefig(f"{name}.png")
+    plt.close()
+
+
+def plot_insertion_probability(x, y, name="plot"):
+    name = "Probability to be insertion"
+
+    plt.title(name)
+    plt.plot(x, y, label="probability of insertion")
+    plt.legend()
+    plt.xlabel("fragments avg length")
+    plt.ylabel("probability")
+    plt.savefig(f"{name}.png")
+    plt.close()
+
+
+def plot_deletion_probability(x, y):
+    name = "Probability to be deletion"
+
+    plt.title(name)
+    plt.plot(x, y, label="probability of deletion")
+    plt.legend()
+    plt.xlabel("fragments avg length")
+    plt.ylabel("probability")
     plt.savefig(f"{name}.png")
     plt.close()
 
@@ -98,7 +135,7 @@ if __name__ == "__main__":
     
     # Options
     parser.add_argument("--verbose", type=bool, default=False, help="Verbose output")
-    parser.add_argument("--plot", type=bool, default=False, 
+    parser.add_argument("--plot", default=False, dest="plot", action="store_true",
         help="Plot and save chart with probability distribution for insertions and deletions")
     parser.add_argument("--track", choices=["insertion", "deletion"],
         help="""Compute the probability to be an insertion/deletion for every genomic position and prints it as a wig track""")
@@ -135,9 +172,11 @@ if __name__ == "__main__":
         x = get_distribution_space(mu, std)
         prob_insertion = get_probability_for_insertion(x, mu, std)
         prob_deletion = get_probability_for_deletion(x, mu, std)
+        pdf = get_pdf(x, mu, std)
 
-        plot_and_save(x, prob_insertion, name="probaility-for-insertion")
-        plot_and_save(x, prob_deletion, name="probaility-for-deletion")
+        plot_pdf(x, pdf, mu, std)
+        plot_insertion_probability(x, prob_insertion)
+        plot_deletion_probability(x, prob_deletion)
 
     if track == "insertion":
         logging.info("Computing insertion probabilities...")
