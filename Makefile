@@ -16,15 +16,17 @@ RELATIVE_ORIENTATIONS=lact_orientation
 PROB_INS=lact_probins
 PROB_DEL=lact_probdel
 MULTIPLE_ALIGNMENTS=lact_multiplealignments
+HS_CLIPPING=lact_hsclipping
 
 ### **********************************************************
 ### MAIN TARGETS
 
-all: aligned
+all: aligned analysis
 .PHONY: all
 
 aligned: ${ALIGNED_SORTED} ${ALIGNED_SORTED_INDEXED}
-.PHONY: aligned
+analysis: ${SEQ_COVERAGE}.wig ${PHYSICAL_COVERAGE}.wig ${SINGLE_MATES}.wig ${AVG_FRAGMENTS_LENGTH}.wig ${RELATIVE_ORIENTATIONS}.wig ${PROB_INS}.wig ${PROB_DEL}.wig ${MULTIPLE_ALIGNMENTS}.wig ${HS_CLIPPING}.wig
+.PHONY: aligned analysis
 
 ### **********************************************************
 ### RECIPES
@@ -89,6 +91,10 @@ ${PROB_DEL}.wig:
 ${MULTIPLE_ALIGNMENTS}.wig:
 	source ./.venv/bin/activate; python3 multiple_alignments.py ${ALIGNED_SAM} ${GENOME_LENGTH} > ${MULTIPLE_ALIGNMENTS}.wig
 
+# Create hard soft clipping track
+${HS_CLIPPING}.wig:
+	source ./.venv/bin/activate; python3 hard_soft_clipping.py ${ALIGNED_SAM} ${GENOME_LENGTH} > ${HS_CLIPPING}.wig
+
 
 ### **********************************************************
 ### UTILS
@@ -112,5 +118,7 @@ clear:
 	rm -f ${RELATIVE_ORIENTATIONS}.wig
 	rm -f ${PROB_INS}.wig
 	rm -f ${PROB_DEL}.wig
+	rm .f ${MULTIPLE_ALIGNMENTS}.wig
+	rm .f ${HS_CLIPPING}.wig
 
 .PHONY: clear clean
