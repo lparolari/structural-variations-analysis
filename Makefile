@@ -60,39 +60,39 @@ ${ALIGNED_SORTED_INDEXED}: ${ALIGNED_SORTED}
 	./samtools index ${ALIGNED_SORTED} > ${ALIGNED_SORTED_INDEXED}
 
 # Create sequence coverage track
-${SEQ_COVERAGE}.wig:
+${SEQ_COVERAGE}.wig: ${ALIGNED_SAM}
 	source ./.venv/bin/activate; python3 sequence_coverage.py ${ALIGNED_SAM} ${GENOME_LENGTH} > ${SEQ_COVERAGE}.wig
 
 # Create physical coverage track
-${PHYSICAL_COVERAGE}.wig:
+${PHYSICAL_COVERAGE}.wig: ${ALIGNED_SAM}
 	source ./.venv/bin/activate; python3 physical_coverage.py ${ALIGNED_SAM} ${GENOME_LENGTH} > ${PHYSICAL_COVERAGE}.wig
 
 # Create single mates track
-${SINGLE_MATES}.wig:
+${SINGLE_MATES}.wig: ${ALIGNED_SAM}
 	source ./.venv/bin/activate; python3 single_mates.py ${ALIGNED_SAM} ${GENOME_LENGTH} > ${SINGLE_MATES}.wig
 
 # Create avg fragments length tracks
-${AVG_FRAGMENTS_LENGTH}.wig:
+${AVG_FRAGMENTS_LENGTH}.wig: ${ALIGNED_SAM}
 	source ./.venv/bin/activate; python3 mean_fragments_length.py ${ALIGNED_SAM} ${GENOME_LENGTH} > ${AVG_FRAGMENTS_LENGTH}.wig
 
 # Create relative orientation track
-${RELATIVE_ORIENTATIONS}.wig:
+${RELATIVE_ORIENTATIONS}.wig: ${ALIGNED_SAM}
 	source ./.venv/bin/activate; python3 relative_orientation_reads.py ${ALIGNED_SAM} ${GENOME_LENGTH} > ${RELATIVE_ORIENTATIONS}.wig
 
 # Create prob ins track
-${PROB_INS}.wig:
+${PROB_INS}.wig: ${ALIGNED_SAM}
 	source ./.venv/bin/activate; python3 fragments_length_distribution.py ${ALIGNED_SAM} ${GENOME_LENGTH} --track insertion > ${PROB_INS}.wig
 
 # Create prob del track
-${PROB_DEL}.wig:
+${PROB_DEL}.wig: ${ALIGNED_SAM}
 	source ./.venv/bin/activate; python3 fragments_length_distribution.py ${ALIGNED_SAM} ${GENOME_LENGTH} --track deletion > ${PROB_DEL}.wig
 
 # Create multiple alignments track
-${MULTIPLE_ALIGNMENTS}.wig:
+${MULTIPLE_ALIGNMENTS}.wig: ${ALIGNED_SAM}
 	source ./.venv/bin/activate; python3 multiple_alignments.py ${ALIGNED_SAM} ${GENOME_LENGTH} > ${MULTIPLE_ALIGNMENTS}.wig
 
 # Create hard soft clipping track
-${HS_CLIPPING}.wig:
+${HS_CLIPPING}.wig: ${ALIGNED_SAM}
 	source ./.venv/bin/activate; python3 hard_soft_clipping.py ${ALIGNED_SAM} ${GENOME_LENGTH} > ${HS_CLIPPING}.wig
 
 
