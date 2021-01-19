@@ -1,9 +1,9 @@
 # Report
 
 > Luca Parolari - 1236601 - luca.parolari@studenti.unipd.it \
-> Corso di Bioinformatics \
-> Dipartimento di Matematica e Informatica \
-> Università di Padova
+> Bioinformatics \
+> Department of Mathematics and Computer Science \
+> University of Padua
 
 The main goal of this document is to show how to implement a simple
 analysis pipeline to detect structural variations on a reference
@@ -12,13 +12,74 @@ genome by aligning unknown bacterium reads.
 The reference genome is from a bacterium called _Lactobacillus casei_
 which is _3079196 bp_ long.
 
+# Indice
+
+- [Analysis](#analysis)
+- [Implementation Details](#implementation-details)
+  - [1. Sequence Coverage](#1-sequence-coverage)
+  - [2. Physical Coverage](#2-physical-coverage)
+  - [3. Single Mates](#3-single-mates)
+  - [4. Average Fragments Length](#4-average-fragments-length)
+  - [5. Relative Reads Orientation](#5-relative-reads-orientation)
+  - [E1/E2. Average Fragments Length Distribution](#e1-e2-average-fragments-length-distribution)
+  - [E3. Multiple Alignments](#e3-multiple-alignments)
+  - [E4. Hard/Soft Clipping](#e4-hard-soft-clipping)
+  - [Utils](#utils)
+  - [Makefile](#makefile)
+- [Reference](#reference)
+
 # Analysis
 
-TODO
+Generated tracks help us to study the alignment of the donor genome on
+the reference genome and detect structural variations.
+
+For example, tracks with coverage and fragments length help us to
+detect mainly insertion and deletions, and partially inversions. When
+average fragments length increases usually we are facing a deletion,
+otherwise it may be an inversion. The two tracks with probabilities of
+insertion and deletion help us in this process.
+
+However, inversions are hard to discover without extra information.
+For this reason we added a track with orientations and hard/soft
+clippings count.
+
+To detect repeats we also added a track that counts multiple
+alignments of reads: we want to identify anomalies as repeats as we
+are interested only in "real" structural variations.
+
+The following table is a collection of some anomalies found using IGV.
+
+| ~ pos   | anomaly   | image                                          |
+| ------- | --------- | ---------------------------------------------- |
+| 147 kb  | repeat    | [0147_repeat.png](./img/0147_repeat.png)       |
+| 620 kb  | deletion  | [0620_deletion.png](./img/0620_deletion.png)   |
+| 700 kb  | inversion | [0700_inversion.png](./img/0700_inversion.png) |
+| 900 kb  | deletion  | [0900_deletion.png](./img/0900_deletion.png)   |
+| 950 kb  | repeat    | [0950_repeat.png](./img/0950_repeat.png)       |
+| 1392 kb | deletion  | [1392_deletion.png](./img/1392_deletion.png)   |
+| 2086 kb | insertion | [2086_insertion.png](./img/2086_insertion.png) |
+
+This is the alignment on the genomic browser at the first glance.
+
+![Full alignment](./img/full.png)
+
+Here follows some examples of anomalies.
+
+![Repeat, ~ 147 kb](./img/0147_repeat.png)
+
+![Deletion, ~ 620 kb](./img/0620_deletion.png)
+
+![Inversion, ~ 700 kb](./img/0700_inversion.png)
+
+![Deletion, ~ 900 kb](./img/0900_deletion.png)
+
+![Repeat, ~ 950 kb](./img/0950_repeat.png)
+
+![Deletion, ~ 1392 kb](./img/1392_deletion.png)
+
+![Insertion, ~ 2086 kb](./img/2086_insertion.png)
 
 # Implementation Details
-
-## Features
 
 Please note that code snippes reported here omit tons of details. For
 a full comprehension of the program one should read the source code
@@ -30,7 +91,7 @@ the whole sam file. Obviuously, this is a very bad drowback in case of
 professional software but in this case we preferred to keep the code
 readable as it is done only for academic purposes.
 
-### 1. Sequence Coverage
+## 1. Sequence Coverage
 
 Sequence coverage is a number that, for every genomic position, counts
 number of reads mapping there. The count is done only for the read.
@@ -46,7 +107,7 @@ each base is covered by a greater number of aligned sequence read.
 > See [`sequence_coverage.py`](../sequence_coverage.py) for more
 > details. (Given source code).
 
-### 2. Physical Coverage
+## 2. Physical Coverage
 
 Physical coverage is a number that, for every genomic position, counts
 number of fragments mapping there. The main difference between
@@ -147,7 +208,7 @@ def get_sum_fragment_change(mates, genome_length):
 > See [`physical_coverage.py`](../physical_coverage.py) for more
 > details.
 
-### 3. Single Mates
+## 3. Single Mates
 
 Single mates are mate pairs where only one of the two reads maps on
 the genome.
@@ -222,7 +283,7 @@ def get_single_mates(mates, genome_length):
 
 > See [`single_mates.py`](../single_mates.py) for more details.
 
-### 4. Average Fragments Length
+## 4. Average Fragments Length
 
 Average fragment length is a number that, for every genomic position,
 represents the average coverage of fragments on that position.
@@ -268,7 +329,7 @@ change by physical coverage change for every genomic position.
 > See [`mean_fragments_length.py`](../mean_fragments_length.py) for
 > more details.
 
-### 5. Relative Reads Orientation
+## 5. Relative Reads Orientation
 
 We calculated realtive reads orienation as a metric that, for every
 genomic position, counts whether a read is mapping in FR mode.
@@ -317,7 +378,7 @@ def get_relative_orientations_change(mates, genome_length):
 > [`relative_orientation_reads.py`](../relative_orientation_reads.py)
 > for more details.
 
-### E1/E2. Average Fragments Length Distribution
+## E1/E2. Average Fragments Length Distribution
 
 In order to discard implausible segnment we should see how they are
 distributed among the genome. In we calculate the distribution of
@@ -388,7 +449,7 @@ def get_probability_for_deletion(x, mu, std):
 > [`fragments_length_distribution.py`](../fragments_length_distribution.py)
 > for more details.
 
-### E3. Multiple Alignments
+## E3. Multiple Alignments
 
 Sometimes some reads can align multiple times on the genome. This can
 help us to indentify repeats on the genome.
@@ -446,7 +507,7 @@ def get_multiple_alignments_change(mates, genome_length):
 > See [`multiple_alignments.py`](../multiple_alignments.py) for more
 > details.
 
-### E4. Hard/Soft Clipping
+## E4. Hard/Soft Clipping
 
 Sometimes the genome has clippings on the alignment when part of
 sequences are uncovered. This can help identify inversions, which is
@@ -570,3 +631,4 @@ However most interesting commands are
 2. [https://en.wikipedia.org/wiki/FASTA](https://en.wikipedia.org/wiki/FASTA)
 3. [https://www.cureffi.org/2012/12/19/forward-and-reverse-reads-in-paired-end-sequencing/](https://www.cureffi.org/2012/12/19/forward-and-reverse-reads-in-paired-end-sequencing/)
 4. [https://towardsdatascience.com/pdf-is-not-a-probability-5a4b8a5d9531](https://towardsdatascience.com/pdf-is-not-a-probability-5a4b8a5d9531)
+5. [https://software.broadinstitute.org/software/igv/AlignmentData](https://software.broadinstitute.org/software/igv/AlignmentData)
