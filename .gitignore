@@ -30,3 +30,6 @@ tmp
 
 # Plots
 *.png
+
+# Docs has its own .gitignore
+!docs/**/*
