@@ -56,7 +56,7 @@ if __name__ == "__main__":
 	parser.add_argument("genome_length", type=int, help="The genome length")
 	
 	# Options
-	parser.add_argument("--verbose", type=bool, default=False, help="Verbose output")
+    parser.add_argument("--verbose", default=False, dest="verbose", action="store_true", help="Verbose output")
 
 	# Get args
 	args = parser.parse_args()

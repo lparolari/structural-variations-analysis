@@ -134,7 +134,7 @@ if __name__ == "__main__":
     parser.add_argument("genome_length", type=int, help="Genome length")
     
     # Options
-    parser.add_argument("--verbose", type=bool, default=False, help="Verbose output")
+    parser.add_argument("--verbose", default=False, dest="verbose", action="store_true", help="Verbose output")
     parser.add_argument("--plot", default=False, dest="plot", action="store_true",
         help="Plot and save chart with probability distribution for insertions and deletions")
     parser.add_argument("--track", choices=["insertion", "deletion"],
