@@ -40,7 +40,7 @@ _Important notes_
   - [5. Relative Reads Orientation](#5-relative-reads-orientation)
   - [E1/E2. Average Fragments Length Distribution](#e1e2-average-fragments-length-distribution)
   - [E3. Multiple Alignments](#e3-multiple-alignments)
-  - [E4. Hard/Soft Clipping](#e4-hard-soft-clipping)
+  - [E4. Hard/Soft Clipping](#e4-hardsoft-clippings)
   - [Utils](#utils)
   - [Makefile](#makefile)
 - [Reference](#reference)
@@ -117,15 +117,13 @@ the case as we are interested only in "real" structural variations.
 The following table is a collection of some intereseting anomalies
 found on genome using IGV.
 
-| ~ pos   | anomaly   | image                                          |
-| ------- | --------- | ---------------------------------------------- |
-| 147 kb  | repeat    | [0147_repeat.png](./img/0147_repeat.png)       |
-| 620 kb  | deletion  | [0620_deletion.png](./img/0620_deletion.png)   |
-| 700 kb  | inversion | [0700_inversion.png](./img/0700_inversion.png) |
-| 900 kb  | deletion  | [0900_deletion.png](./img/0900_deletion.png)   |
-| 950 kb  | repeat    | [0950_repeat.png](./img/0950_repeat.png)       |
-| 1392 kb | deletion  | [1392_deletion.png](./img/1392_deletion.png)   |
-| 2086 kb | insertion | [2086_insertion.png](./img/2086_insertion.png) |
+| ~ pos   | ~ length | anomaly   | image                      |
+| ------- | -------- | --------- | -------------------------- |
+| 620 kb  | 15 kb    | repeat    | [0620.png](./img/0620.png) |
+| 700 kb  | 1.5 kb   | inversion | [0700.png](./img/0700.png) |
+| 900 kb  | 20 kb    | repeat    | [0900.png](./img/0900.png) |
+| 1392 kb | 15 kb    | deletion  | [1392.png](./img/1392.png) |
+| 2086 kb | 1.5 kb   | insertion | [2086.png](./img/2086.png) |
 
 The image _Full genome_ represents the genome with analysis tracks at
 the first glance on the genomic browser.
@@ -134,19 +132,15 @@ the first glance on the genomic browser.
 
 Other images, listed in the table, shows some of the anomalies.
 
-![Repeat, ~ 147 kb](./img/0147_repeat.png)
+![Long repeat at ~ 620 kb](./img/0620.png)
 
-![Deletion, ~ 620 kb](./img/0620_deletion.png)
+![Short inversion at ~ 700 kb](./img/0700.png)
 
-![Inversion, ~ 700 kb](./img/0700_inversion.png)
+![Long repeat at ~ 900 kb](./img/0900.png)
 
-![Deletion, ~ 900 kb](./img/0900_deletion.png)
+![Long deletion at ~ 1392 kb](./img/1392.png)
 
-![Repeat, ~ 950 kb](./img/0950_repeat.png)
-
-![Deletion, ~ 1392 kb](./img/1392_deletion.png)
-
-![Insertion, ~ 2086 kb](./img/2086_insertion.png)
+![Short insertion at ~ 2086 kb](./img/2086.png)
 
 # Implementation Details
 
@@ -577,7 +571,7 @@ def get_multiple_alignments_change(mates, genome_length):
 > See [`multiple_alignments.py`](../multiple_alignments.py) for more
 > details.
 
-## E4. Hard/Soft Clipping
+## E4. Hard/Soft Clippings
 
 Sometimes the genome has clippings on the alignment when part of
 sequences are uncovered. This can help identify inversions, which is
