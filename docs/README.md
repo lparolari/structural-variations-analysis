@@ -1,7 +1,7 @@
 # Report
 
 > Luca Parolari - 1236601 - luca.parolari@studenti.unipd.it \
-> Bioinformatics \
+> Bioinformatics (a.y. 2020-2021)\
 > Department of Mathematics and Computer Science \
 > University of Padua
 
@@ -19,14 +19,14 @@ which is _3079196 bp_ long.
   - [How To Detect Structural Variations](#how-to-detect-structural-variations)
   - [Extract Information From Mate Pairs](#extract-information-from-mate-pairs)
   - [Exploit The Information](#exploit-the-information)
-  - [Outcome](#outcome)
+- [Results](#results)
 - [Implementation Details](#implementation-details)
   - [1. Sequence Coverage](#1-sequence-coverage)
   - [2. Physical Coverage](#2-physical-coverage)
   - [3. Single Mates](#3-single-mates)
   - [4. Average Fragments Length](#4-average-fragments-length)
   - [5. Relative Reads Orientation](#5-relative-reads-orientation)
-  - [E1/E2. Average Fragments Length Distribution](#e1-e2-average-fragments-length-distribution)
+  - [E1/E2. Average Fragments Length Distribution](#e1e2-average-fragments-length-distribution)
   - [E3. Multiple Alignments](#e3-multiple-alignments)
   - [E4. Hard/Soft Clipping](#e4-hard-soft-clipping)
   - [Utils](#utils)
@@ -39,8 +39,9 @@ which is _3079196 bp_ long.
 
 In order to analyze unknown bacterium reads we need to study how they
 relate wrt a reference genome. In particular, we want to find
-structural variations like insertions, deletions and inversions. To
-perform this task we want to exploit mate pairs, but first of all we
+structural variations like insertions, deletions and inversions.
+
+To reach the goal we want to exploit mate pairs, but first of all we
 need to remember how they are extracted from donor.
 
 ## How To Detect Structural Variations
@@ -62,10 +63,10 @@ two mates but one of them changes its orientation.
 
 ## Extract Information From Mate Pairs
 
-In order to extract information on mate pairs data, a pipeline were
-implemented with the aim of generating some tracks encoding different
-information which will help us understand and detect structural
-variations.
+In order to extract information on mate pairs, we need to implement a
+pipeline with the aim of generating some tracks encoding different
+information. These tracks will help us understand and detect
+structural variations.
 
 The analysis of
 
@@ -82,23 +83,27 @@ structural variation, and in case, understand which one.
 
 ## Exploit The Information
 
-For example, tracks with coverages and fragments length help us to
-detect mainly insertion and deletions, and partially inversions. When
-average fragments length increases usually we are facing a deletion,
-otherwise it may be an inversion. Also the two tracks with
-probabilities can help identifying which SV we are looking at.
+Tracks with coverages and fragments length help us to detect mainly
+insertion and deletions, and partially inversions. When average
+fragments length increases usually we are facing a deletion, otherwise
+it may be an insertion. Also the two tracks with probabilities can
+help identifying which SV we are looking at in case of insertion and
+deletions. (See section
+[E1/E2. Average Fragments Length Distribution](#e1e2-average-fragments-length-distribution)
+for more details).
 
 However, inversions are hard to discover without extra information.
-For this reason we added a track with reads orientations and hard/soft
-clippings count.
+For this reason we add a track with relative reads orientations and
+hard/soft clippings count.
 
 To detect repeats we also added a track that counts multiple
 alignments of reads: we want to identify anomalies as repeats if it is
 the case as we are interested only in "real" structural variations.
 
-## Outcome
+# Results
 
-The following table is a collection of some anomalies found using IGV.
+The following table is a collection of some intereseting anomalies
+found on genome using IGV.
 
 | ~ pos   | anomaly   | image                                          |
 | ------- | --------- | ---------------------------------------------- |
@@ -110,11 +115,12 @@ The following table is a collection of some anomalies found using IGV.
 | 1392 kb | deletion  | [1392_deletion.png](./img/1392_deletion.png)   |
 | 2086 kb | insertion | [2086_insertion.png](./img/2086_insertion.png) |
 
-This is the alignment on the genomic browser at the first glance.
+The image _Full genome_ represents the genome with analysis tracks at
+the first glance on the genomic browser.
 
-![Full alignment](./img/full.png)
+![Full genome](./img/full.png)
 
-The images show some examples of anomalies.
+Other images, listed in the table, shows some of the anomalies.
 
 ![Repeat, ~ 147 kb](./img/0147_repeat.png)
 
@@ -136,7 +142,7 @@ Please note that code snippes reported here omit tons of details. For
 a full comprehension of the program one should read the source code
 which, we belive, is readable, documented and self-contained.
 
-Note also that programs are not very fast: they take up a lot of
+Note also that programs are not very optimized: they take up a lot of
 memory by preallocating all the data structures and keeping in memory
 the whole sam file. Obviuously, this is a very bad drowback in case of
 professional software but in this case we preferred to keep the code
@@ -432,9 +438,10 @@ def get_relative_orientations_change(mates, genome_length):
 ## E1/E2. Average Fragments Length Distribution
 
 In order to discard implausible segnment we should see how they are
-distributed among the genome. In we calculate the distribution of
+distributed among the genome. If we calculate the distribution of
 fragments length we end up with a pdf very close to a normal
-distribution.
+distribution. In particular the obtained pdf, represented in the
+following image, has $$\mu = 2235.59$$ and $$\sigma = 685.87$$
 
 ![Probability Density Function for average fragments length](img/pdf.png)
 
