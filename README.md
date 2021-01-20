@@ -1,4 +1,4 @@
-# Structural Variation Analysis
+# Structural Variations Analysis
 
 > Finding structural variations in a genome after comparison with a
 > reference genome.

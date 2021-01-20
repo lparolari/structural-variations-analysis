@@ -17,12 +17,12 @@ _Important notes_
 - The full project (source code and docs) is available on GitHub with
   open-source license.
 
-> [https://github.com/lparolari/structural-vartiation-analysis](https://github.com/lparolari/structural-vartiation-analysis)
+> [https://github.com/lparolari/structural-vartiations-analysis](https://github.com/lparolari/structural-vartiations-analysis)
 
 - For more information on how to run the code please refer to the
   README.md file on GitHub.
 
-> [https://github.com/lparolari/structural-vartiation-analysis#readme](https://github.com/lparolari/structural-vartiation-analysis#readme)
+> [https://github.com/lparolari/structural-vartiations-analysis#readme](https://github.com/lparolari/structural-vartiations-analysis#readme)
 
 # Index
 
