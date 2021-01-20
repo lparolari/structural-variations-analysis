@@ -12,9 +12,14 @@ genome by aligning unknown bacterium reads.
 The reference genome is from a bacterium called _Lactobacillus casei_
 which is _3079196 bp_ long.
 
-# Indice
+# Index
 
 - [Analysis](#analysis)
+  - [The Goal](#the-goal)
+  - [How To Detect Structural Variations](#how-to-detect-structural-variations)
+  - [Extract Information From Mate Pairs](#extract-information-from-mate-pairs)
+  - [Exploit The Information](#exploit-the-information)
+  - [Outcome](#outcome)
 - [Implementation Details](#implementation-details)
   - [1. Sequence Coverage](#1-sequence-coverage)
   - [2. Physical Coverage](#2-physical-coverage)
@@ -30,22 +35,68 @@ which is _3079196 bp_ long.
 
 # Analysis
 
-Generated tracks help us to study the alignment of the donor genome on
-the reference genome and detect structural variations.
+## The Goal
 
-For example, tracks with coverage and fragments length help us to
+In order to analyze unknown bacterium reads we need to study how they
+relate wrt a reference genome. In particular, we want to find
+structural variations like insertions, deletions and inversions. To
+perform this task we want to exploit mate pairs, but first of all we
+need to remember how they are extracted from donor.
+
+## How To Detect Structural Variations
+
+As said in [Mednedev et al., 2009][1], modern sequencing technologies
+can generate two reads at an approximately known distance in genome
+(insert). Mate pairs are created when genomic DNA is fragmented and
+size-selected inserts are circularized and linked by means of an
+internal adaptor. Finally, mate pairs are sequenced around the
+adaptor.
+
+Mate pairs can be studied to detect some structural variations by
+simply looking at the average fragments length that maps on the
+reference genome. For example, deletions are found when a mate pair
+maps over an region with deletion on the reference genome, but the
+mapped distance is greather than the insert size. This holds,
+simmetrically, for inserts. Inversions instead keep the order of the
+two mates but one of them changes its orientation.
+
+## Extract Information From Mate Pairs
+
+In order to extract information on mate pairs data, a pipeline were
+implemented with the aim of generating some tracks encoding different
+information which will help us understand and detect structural
+variations.
+
+The analysis of
+
+- sequence coverage,
+- physical coverage,
+- average fragments length,
+- relative reads orientation,
+- fragments length distribution,
+- multiple alignments, and
+- hard/soft clippings
+
+should give enough information to infer whether an anomaly is a
+structural variation, and in case, understand which one.
+
+## Exploit The Information
+
+For example, tracks with coverages and fragments length help us to
 detect mainly insertion and deletions, and partially inversions. When
 average fragments length increases usually we are facing a deletion,
-otherwise it may be an inversion. The two tracks with probabilities of
-insertion and deletion help us in this process.
+otherwise it may be an inversion. Also the two tracks with
+probabilities can help identifying which SV we are looking at.
 
 However, inversions are hard to discover without extra information.
-For this reason we added a track with orientations and hard/soft
+For this reason we added a track with reads orientations and hard/soft
 clippings count.
 
 To detect repeats we also added a track that counts multiple
-alignments of reads: we want to identify anomalies as repeats as we
-are interested only in "real" structural variations.
+alignments of reads: we want to identify anomalies as repeats if it is
+the case as we are interested only in "real" structural variations.
+
+## Outcome
 
 The following table is a collection of some anomalies found using IGV.
 
@@ -63,7 +114,7 @@ This is the alignment on the genomic browser at the first glance.
 
 ![Full alignment](./img/full.png)
 
-Here follows some examples of anomalies.
+The images show some examples of anomalies.
 
 ![Repeat, ~ 147 kb](./img/0147_repeat.png)
 
@@ -632,3 +683,8 @@ However most interesting commands are
 3. [https://www.cureffi.org/2012/12/19/forward-and-reverse-reads-in-paired-end-sequencing/](https://www.cureffi.org/2012/12/19/forward-and-reverse-reads-in-paired-end-sequencing/)
 4. [https://towardsdatascience.com/pdf-is-not-a-probability-5a4b8a5d9531](https://towardsdatascience.com/pdf-is-not-a-probability-5a4b8a5d9531)
 5. [https://software.broadinstitute.org/software/igv/AlignmentData](https://software.broadinstitute.org/software/igv/AlignmentData)
+6. Medvedev P, Stanciu M, Brudno M. _Computational methods for
+   discovering structural variation with next-generation sequencing_.
+   Nat Methods. 2009 Nov. ([link][1])
+
+[1]: http://www.cs.toronto.edu/~brudno/nmeth_review09.pdf
