@@ -12,6 +12,18 @@ genome by aligning unknown bacterium reads.
 The reference genome is from a bacterium called _Lactobacillus casei_
 which is _3079196 bp_ long.
 
+_Important notes_
+
+- The full project (source code and docs) is available on GitHub with
+  open-source license.
+
+> [https://github.com/lparolari/structural-vartiation-analysis](https://github.com/lparolari/structural-vartiation-analysis)
+
+- For more information on how to run the code please refer to the
+  README.md file on GitHub.
+
+> [https://github.com/lparolari/structural-vartiation-analysis#readme](https://github.com/lparolari/structural-vartiation-analysis#readme)
+
 # Index
 
 - [Analysis](#analysis)
@@ -692,6 +704,6 @@ However most interesting commands are
 5. [https://software.broadinstitute.org/software/igv/AlignmentData](https://software.broadinstitute.org/software/igv/AlignmentData)
 6. Medvedev P, Stanciu M, Brudno M. _Computational methods for
    discovering structural variation with next-generation sequencing_.
-   Nat Methods. 2009 Nov. ([link][1])
+   Nat Methods. 2009 Nov. ([paper][1])
 
 [1]: http://www.cs.toronto.edu/~brudno/nmeth_review09.pdf
