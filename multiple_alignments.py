@@ -12,7 +12,8 @@ def get_multiple_alignments_change(mates, genome_length):
 
 	for mate in mates:
 		pos = mate["pos"]
-		aligments = mate["ma"]  # other alignments where read maps, can also be empty!
+		# other alignments where read maps, can also be empty!
+		aligments = mate["ma"]
 
 		if (len(aligments) == 0):
 			continue
@@ -34,14 +35,15 @@ def get_multiple_alignments_change(mates, genome_length):
 
 def get_multiple_alignments(mates, genome_length):
 	multiple_alignments = [0] * genome_length
-	multiple_alignments_change = get_multiple_alignments_change(mates, genome_length)
+	multiple_alignments_change = get_multiple_alignments_change(
+	    mates, genome_length)
 
 	current_change = 0
 
 	for i in range(genome_length):
 		current_change += multiple_alignments_change[i]
 		multiple_alignments[i] = current_change
-	
+
 	return multiple_alignments
 
 
@@ -52,22 +54,23 @@ if __name__ == "__main__":
 	""")
 
 	# Main args
-	parser.add_argument("file", type=pathlib.Path, help="A genome file in .sam format")
+	parser.add_argument("file", type=pathlib.Path,
+	                    help="A genome file in .sam format")
 	parser.add_argument("genome_length", type=int, help="The genome length")
-	
+
 	# Options
     parser.add_argument("--verbose", default=False, dest="verbose", action="store_true", help="Verbose output")
 
 	# Get args
 	args = parser.parse_args()
-	
+
 	input_file = args.file
 	genome_length = args.genome_length
 	verbose = args.verbose
 
 	# Set loggin level
 	logging.basicConfig(level=(logging.DEBUG if verbose else None))
-	
+
 	logging.debug(f"input_file = {input_file}")
 	logging.debug(f"genome_length = {genome_length}")
 
